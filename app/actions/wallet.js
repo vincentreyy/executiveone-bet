@@ -118,7 +118,7 @@ export async function listDepositQueue() {
 
 const requestWithdrawalSchema = z.object({
   amount: z.number().int().positive(),
-  destination: z.string().trim().min(1, "Say where to hand it off."),
+  destination: z.string().trim().optional(), // no longer collected by the UI; tolerated if ever sent
 });
 
 // The amount leaves the user's balance immediately and sits held until an
@@ -139,7 +139,7 @@ export async function requestWithdrawal(input) {
         .where(eq(users.id, user.id));
       await tx.insert(transactions).values({
         id: createId(), userId: user.id, type: "withdrawal", amount: -amount,
-        status: "pending", destination, note: destination,
+        status: "pending", destination: destination || null, note: destination || null,
       });
     });
   } catch (e) {
@@ -195,9 +195,10 @@ export async function markWithdrawalPaid(input) {
       transactionId: wd.id, adminId: admin.id,
       note: `Withdrawal paid · ${wdUser.ign || wdUser.displayName}`,
     });
+    const payoutNote = parsed.data.note || wd.destination;
     await logAction(tx, {
       adminId: admin.id, actionType: "Withdrawal paid", targetType: "user",
-      targetId: wd.userId, note: `${money(Math.abs(wd.amount))} · ${parsed.data.note || wd.destination}`,
+      targetId: wd.userId, note: payoutNote ? `${money(Math.abs(wd.amount))} · ${payoutNote}` : money(Math.abs(wd.amount)),
     });
   });
 
