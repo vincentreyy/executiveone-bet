@@ -55,6 +55,46 @@ export async function createUser(input) {
   return { ok: true, userId, tempPassword };
 }
 
+const renameUserSchema = z.object({
+  userId: z.string().min(1),
+  displayName: z.string().trim().min(1),
+  ign: z.string().trim().optional(),
+});
+
+// Corrects a display name / in-game character after the account already
+// exists — username is deliberately not a field on this schema at all (not
+// just unused), since it's the login identifier and must stay stable.
+export async function renameUser(input) {
+  const admin = await requirePermission("manage_users");
+  const parsed = renameUserSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message || "Invalid request." };
+  const p = parsed.data;
+
+  await db.transaction(async (tx) => {
+    const [before] = await tx.select().from(users).where(eq(users.id, p.userId));
+    if (!before) throw new Error("User not found.");
+
+    await tx.update(users).set({
+      displayName: p.displayName,
+      ign: p.ign || null,
+    }).where(eq(users.id, p.userId));
+
+    const diffs = [];
+    if (before.displayName !== p.displayName) diffs.push(`name ${before.displayName} → ${p.displayName}`);
+    if ((before.ign || "") !== (p.ign || "")) diffs.push(`character ${before.ign || "—"} → ${p.ign || "—"}`);
+
+    await logAction(tx, {
+      adminId: admin.id,
+      actionType: "User renamed",
+      targetType: "user",
+      targetId: p.userId,
+      note: diffs.length ? diffs.join(" · ") : "No changes",
+    });
+  });
+
+  return { ok: true };
+}
+
 const resetPasswordSchema = z.object({
   userId: z.string().min(1),
   reason: z.string().trim().optional(),
