@@ -432,13 +432,11 @@ export function Wallet({ S, sessionUser }) {
   const [step, setStep] = useState(1);
   const [amt, setAmt] = useState("10000");
   const [wamt, setWamt] = useState("");
-  const [dest, setDest] = useState("Cash handoff · Mirror Park garage");
   const [wstep, setWstep] = useState(1);
   const locked = S.bets.filter(b => b.uid === "me" && b.status === "pending").reduce((s, b) => s + b.stake, 0);
   const pendWd = S.pendingWd || 0;
   const w = Number(wamt) || 0;
   const TT = { deposit: ["Deposit", "var(--up)"], win: ["Win", "var(--up)"], bet: ["Bet", "var(--body)"], withdrawal: ["Withdrawal", "var(--yellow)"], adjustment: ["Adjustment", "var(--muted-2)"] };
-  const DESTS = ["Cash handoff · Mirror Park garage", "Cash handoff · Vinewood casino lot", "Bank transfer · Fleeca Legion Sq."];
   const statusBadge = s => s === "rejected" ? "b-live" : s === "refunded" ? "b-warn" : s === "approved" ? "b-open" : s === "pending" ? "b-pend" : "b-set";
   const [txType, setTxType] = useState("all");
   const [txStatus, setTxStatus] = useState("all");
@@ -512,8 +510,6 @@ export function Wallet({ S, sessionUser }) {
             <div className="flex" style={{ gap: 8, marginTop: 10 }}>
               {[5000, 25000].map(v => <button key={v} className="btn btn-ghost btn-xs" disabled={v > S.balance} onClick={() => setWamt(String(v))}>{fmt(v)}</button>)}
               <button className="btn btn-ghost btn-xs" onClick={() => setWamt(String(S.balance))}>All ({fmt(S.balance)})</button></div>
-            <div style={{ marginTop: 16 }}><label className="f">WHERE TO HAND IT OVER</label>
-              <select className="input" value={dest} onChange={e => setDest(e.target.value)}>{DESTS.map(d => <option key={d}>{d}</option>)}</select></div>
             <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--hair)" }}>
               <div className="kv"><span className="muted">Confirmed balance</span><span className="num">{fmt(S.balance)} {CUR}</span></div>
               <div className="kv"><span className="muted">This request</span><span className="num">−{fmt(w)} {CUR}</span></div>
@@ -528,9 +524,8 @@ export function Wallet({ S, sessionUser }) {
               <div className="cap" style={{ marginBottom: 8 }}>REQUESTING</div>
               <div className="num yel" style={{ fontSize: 28, fontWeight: 700 }}>{money(w)}</div>
               <div className="kv" style={{ marginTop: 10 }}><span className="muted">To</span><span>{ign}</span></div>
-              <div className="kv"><span className="muted">Handoff</span><span style={{ textAlign: "right" }}>{dest}</span></div>
             </div>
-            <button className="btn btn-y" style={{ width: "100%" }} onClick={() => { run(requestWithdrawal, { amount: w, destination: dest }); setWamt(""); setWstep(1); }}>Submit for approval</button>
+            <button className="btn btn-y" style={{ width: "100%" }} onClick={() => { run(requestWithdrawal, { amount: w }); setWamt(""); setWstep(1); }}>Submit for approval</button>
             <button className="btn btn-t btn-sm" style={{ width: "100%", marginTop: 6 }} onClick={() => setWstep(1)}>Back</button>
           </>}
           {pendWd > 0 && <div className="card-flat" style={{ background: "var(--elev)", marginTop: 16, padding: "12px 14px" }}>
