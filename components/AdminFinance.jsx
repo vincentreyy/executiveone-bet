@@ -26,7 +26,13 @@ export function AdminFinance({ S }) {
     && (l.note + l.admin).toLowerCase().includes(q.toLowerCase()));
   // Sums every matching entry regardless of pagination — list is the full
   // filtered set, computed before the page-slice below decides what renders.
-  const filteredTotal = list.reduce((s, l) => s + l.amount, 0);
+  // Rake is excluded unless the admin deliberately filtered down to it —
+  // otherwise this total would disagree with HOUSE BALANCE, which excludes
+  // rake for the same reason getHouseFinance() does (see lib/data/finance.js):
+  // rake isn't new cash, it's a split of cash already counted once.
+  const filteredTotal = list
+    .filter(l => type === "rake" || l.type !== "rake")
+    .reduce((s, l) => s + l.amount, 0);
   const [page, setPage] = useState(1);
   const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   const p = Math.min(page, pageCount);
