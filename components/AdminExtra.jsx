@@ -4,7 +4,7 @@ import { Stat, Pagination } from "./UserScreens";
 import { useServerAction } from "@/lib/useServerAction";
 import { useToast } from "@/components/ToastProvider";
 import { CUR, fmt, money, ago, PAGE_SIZE, PERMS, ALL_PERMS, PERM_LABEL } from "@/lib/store";
-import { createUser, resetPassword, toggleUserStatus, adjustBalance } from "@/app/actions/users";
+import { createUser, resetPassword, toggleUserStatus, adjustBalance, renameUser } from "@/app/actions/users";
 import { createRole, editRole, deleteRole, setUserRole } from "@/app/actions/roles";
 
 function copyToClipboard(text, say) {
@@ -38,6 +38,7 @@ export function AdminUsers({ S }) {
   const [open, setOpen] = useState(null);
   const [adj, setAdj] = useState("");
   const [reason, setReason] = useState("");
+  const [rn, setRn] = useState({ name: "", ign: "" });
   const [nu, setNu] = useState(null);
   const [pwReveal, setPwReveal] = useState(null);
   const list = S.users.filter(u => (u.name + u.ign + u.un).toLowerCase().includes(q.toLowerCase()))
@@ -74,7 +75,7 @@ export function AdminUsers({ S }) {
             <td className="num" style={{ textAlign: "right", color: pl >= 0 ? "var(--up)" : "var(--down)" }}>{pl >= 0 ? "+" : ""}{fmt(pl)}</td>
             <td style={{ textAlign: "right" }}><span className={"badge " + (x.invited ? "b-pend" : x.status === "active" ? "b-open" : "b-live")}>{x.invited ? "temp password" : x.status}</span>
               {x.flags.length > 0 && <div className="cap" style={{ color: "var(--yellow)", marginTop: 4 }}>{x.flags.length} flag{x.flags.length > 1 ? "s" : ""}</div>}</td>
-            <td style={{ textAlign: "right" }}><button className="btn btn-ghost btn-xs" onClick={() => { setOpen(x.id); setAdj(""); setReason(""); }}>Manage</button></td>
+            <td style={{ textAlign: "right" }}><button className="btn btn-ghost btn-xs" onClick={() => { setOpen(x.id); setAdj(""); setReason(""); setRn({ name: x.name, ign: x.ign }); }}>Manage</button></td>
           </tr>; })}</tbody>
       </table></div>
       {!list.length && <div className="muted" style={{ padding: "28px 0", textAlign: "center", fontSize: 13 }}>No accounts match “{q}”.</div>}
@@ -120,6 +121,20 @@ export function AdminUsers({ S }) {
             setOpen(null);
             if (res?.ok) setPwReveal({ title: "Password reset", username: u.un, tempPassword: res.tempPassword });
           }}>Reset password</button></div></div>
+      <div className="card-flat" style={{ background: "var(--elev)", padding: "12px 14px", margin: "16px 0" }}>
+        <div className="cap" style={{ marginBottom: 8 }}>NAME & CHARACTER</div>
+        <div className="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div><label className="f">DISPLAY NAME</label>
+            <input className="input" value={rn.name} onChange={e => setRn(v => ({ ...v, name: e.target.value }))} /></div>
+          <div><label className="f">CHARACTER (IGN)</label>
+            <input className="input" value={rn.ign} onChange={e => setRn(v => ({ ...v, ign: e.target.value }))} /></div>
+        </div>
+        <div className="flex" style={{ justifyContent: "flex-end", marginTop: 10 }}>
+          <button className="btn btn-2 btn-sm" disabled={!rn.name.trim() || (rn.name === u.name && rn.ign === u.ign)}
+            onClick={() => run(renameUser, { userId: u.id, displayName: rn.name.trim(), ign: rn.ign.trim() })}>Save name</button>
+        </div>
+        <div className="cap" style={{ color: "var(--muted)", marginTop: 8 }}>Username (@{u.un}) can't be changed here — it's what they log in with.</div>
+      </div>
       <div className="grid" style={{ gridTemplateColumns: "repeat(3,1fr)", gap: 12, margin: "20px 0" }}>
         <div className="card-flat" style={{ background: "var(--elev)", padding: 14 }}><Stat label="CONFIRMED" value={fmt(u.bal)} color="var(--yellow)" /></div>
         <div className="card-flat" style={{ background: "var(--elev)", padding: 14 }}><Stat label="LOCKED" value={fmt(u.locked)} /></div>
