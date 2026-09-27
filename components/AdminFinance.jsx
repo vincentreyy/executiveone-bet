@@ -24,6 +24,9 @@ export function AdminFinance({ S }) {
   const admins = [...new Set(S.ledger.map(l => l.admin))];
   const list = S.ledger.filter(l => (type === "all" || l.type === type) && (who === "all" || l.admin === who)
     && (l.note + l.admin).toLowerCase().includes(q.toLowerCase()));
+  // Sums every matching entry regardless of pagination — list is the full
+  // filtered set, computed before the page-slice below decides what renders.
+  const filteredTotal = list.reduce((s, l) => s + l.amount, 0);
   const [page, setPage] = useState(1);
   const pageCount = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   const p = Math.min(page, pageCount);
@@ -54,6 +57,11 @@ export function AdminFinance({ S }) {
           {admins.map(a => <button key={a} className={"pill-tab" + (who === a ? " on" : "")} onClick={() => setWho(a)}>{a}</button>)}</div>
       </div>
       <input className="input" style={{ width: 260 }} value={q} onChange={e => setQ(e.target.value)} placeholder="Search notes" />
+      <div className="flex" style={{ justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--hair)" }}>
+        <span className="cap" style={{ color: "var(--muted)" }}>{list.length} {list.length === 1 ? "entry" : "entries"} match</span>
+        <span className="num" style={{ fontWeight: 700, color: filteredTotal >= 0 ? "var(--up)" : "var(--down)" }}>
+          {filteredTotal >= 0 ? "+" : ""}{money(filteredTotal)}</span>
+      </div>
     </div>
     <div className="grid g2" style={{ gridTemplateColumns: "1fr 360px", alignItems: "start" }}>
       <div className="card">
