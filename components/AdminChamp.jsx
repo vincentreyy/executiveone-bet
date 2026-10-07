@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { Dot, Stat, Badge, Pagination } from "./UserScreens";
+import { Dot, Stat, Badge, Pagination, EyeToggle } from "./UserScreens";
 import { useServerAction } from "@/lib/useServerAction";
 import { money, poolOf, raceWindow, PAGE_SIZE } from "@/lib/store";
+import { setRaceHidden } from "@/app/actions/races";
 import {
   createChampionship, toggleRaceCounts, toggleRound as toggleRoundAction, setMarketEntrants,
   setPointsScale, savePointsPreset, deletePointsPreset, renameChampionship, setChampionshipRake,
@@ -114,6 +115,17 @@ export function AdminChampionships({ S }) {
       <div className="card"><Stat label="POINTS SYSTEM" value={ch.points.slice(0, 3).join("–") + "…"} sub={"P1–P" + ch.points.length + (ch.fl ? " + " + ch.fl + " fastest lap" : "") + (ch.pole ? " + " + ch.pole + " pole" : "") + (ch.minLaps ? " + " + ch.minLaps + " min-laps DNF" : "")} /></div>
       <div className="card"><Stat label="OUTRIGHT POOLS" value={money(poolOf(S.bets, ch.driversMarket) + poolOf(S.bets, ch.constructorsMarket))} sub="Drivers + constructors" color="var(--up)" /></div>
       <div className="card"><Stat label="HOUSE RAKE" value={(driversMarketRace?.rake || 0) + "%"} sub="Both outright markets" /></div>
+    </div>
+
+    <div className="card" style={{ padding: "12px 20px", marginBottom: 16 }}>
+      <div className="flex" style={{ gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="cap">PLAYER VISIBILITY</span>
+        {[["Drivers market", driversMarketRace], ["Constructors market", constructorsMarketRace]].map(([l, m]) => m && <div key={l} className="flex" style={{ gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 13 }}>{l}</span>
+          <span className={"badge " + (m.hidden ? "b-pend" : "b-open")}>{m.hidden ? "Hidden" : "Visible"}</span>
+          <EyeToggle hidden={m.hidden} onClick={() => run(setRaceHidden, { id: m.id, hidden: !m.hidden }, m.hidden ? `${l} is visible to players again.` : `${l} hidden from players.`)} />
+        </div>)}
+      </div>
     </div>
 
     <div className="flex" style={{ gap: 6, marginBottom: 16 }}>

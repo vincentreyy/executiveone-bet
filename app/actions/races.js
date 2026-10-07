@@ -210,3 +210,32 @@ export async function renameRace(input) {
 
   return { ok: true };
 }
+
+const setRaceHiddenSchema = z.object({
+  id: z.string().min(1),
+  hidden: z.boolean(),
+});
+
+// Hides a race / championship market from every player-facing page and blocks
+// new bets on it; admins still see and manage it. Reversible, and leaves
+// status, bets and settlement untouched.
+export async function setRaceHidden(input) {
+  const admin = await requirePermission("manage_races");
+  const parsed = setRaceHiddenSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Invalid request." };
+  const p = parsed.data;
+
+  await db.transaction(async (tx) => {
+    const [race] = await tx.select().from(races).where(eq(races.id, p.id));
+    if (!race) throw new Error("Race not found.");
+    await tx.update(races).set({ hidden: p.hidden }).where(eq(races.id, p.id));
+    await logAction(tx, {
+      adminId: admin.id,
+      actionType: p.hidden ? "Race hidden" : "Race unhidden",
+      targetType: "race", targetId: p.id,
+      note: race.name,
+    });
+  });
+
+  return { ok: true };
+}

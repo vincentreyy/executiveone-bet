@@ -8,8 +8,8 @@ import { Landing } from "@/components/UserScreens";
 
 export default async function Page() {
   const user = await getOptionalUser();
-  const races = await getRaceList();
-  const bets = await getPoolBets();
+  const races = await getRaceList({ publicOnly: true });
+  const bets = await getPoolBets({ publicOnly: true });
   const { roster, teams } = await getRosterAndTeams();
 
   return (
