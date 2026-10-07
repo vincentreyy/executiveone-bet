@@ -584,7 +584,7 @@ export function AdminRaces({ S }) {
               {[["Drv", "countsD"], ["Con", "countsC"]].map(([l, f]) => <label key={f} className="flex" style={{ gap: 6, alignItems: "center", fontSize: 12, color: "var(--muted-2)", cursor: "pointer" }}>
                 <Check on={!!r[f]} onClick={() => run(toggleRaceCounts, { raceId: r.id, field: f })} />{l}</label>)}
             </div></td>
-            <td className="num" style={{ textAlign: "right" }}>{fmt(poolOf(S.bets, r.id))}</td>
+            <td className="num" style={{ textAlign: "right" }}><Link href={`/admin/bettors?race=${r.id}`} title="See who bet on this race" style={{ textDecoration: "underline dotted" }}>{fmt(poolOf(S.bets, r.id))}</Link></td>
             <td style={{ textAlign: "right" }}><Badge s={r.status} /><div style={{ marginTop: 4 }}><EyeToggle hidden={r.hidden} onClick={() => run(setRaceHidden, { id: r.id, hidden: !r.hidden }, r.hidden ? "Race is visible to players again." : "Race hidden from players.")} /></div></td>
             <td style={{ textAlign: "right" }}>{r.status === "settled" ? <Link href={`/admin/settle?race=${r.id}`} className="btn btn-ghost btn-xs">Adjustments</Link> : <button className="btn btn-ghost btn-xs" onClick={() => setRen({ id: r.id, name: r.name, circuit: r.circuit, dt: r.dt, lock: r.lock, rake: String(r.rake), champId: r.champId || "", round: r.round || "", countsD: !!r.countsD, countsC: !!r.countsC, status: r.status, drivers: (r.drivers || []).slice(), gridLocked: r.status !== "upcoming", pole: r.pole || "", minLaps: r.minLaps != null ? String(r.minLaps) : "" })}>Edit</button>}</td>
           </tr>; })}</tbody></table></div>

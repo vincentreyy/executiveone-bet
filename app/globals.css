@@ -140,3 +140,12 @@ input.input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover{opac
 .driverrow.win{background:rgba(58,212,237,.07);border-color:rgba(58,212,237,.35)}
 .driverrow.out{opacity:.62}
 .driverrow.out:hover{opacity:.85}
+
+/* Slim dark scrollbars (page, modals, tables) to match the theme */
+html{color-scheme:dark}
+*{scrollbar-width:thin;scrollbar-color:var(--elev) transparent}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--elev);border-radius:9999px;border:2px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:content-box}
+*::-webkit-scrollbar-corner{background:transparent}
