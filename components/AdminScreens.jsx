@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Badge, Dot, Stat, LocalTime, Pagination } from "./UserScreens";
+import { Badge, Dot, Stat, LocalTime, Pagination, EyeToggle } from "./UserScreens";
 import { Check } from "./AdminChamp";
 import { useEntrantLookup } from "@/lib/entrantContext";
 import { useServerAction } from "@/lib/useServerAction";
@@ -15,7 +15,7 @@ import {
   approveWithdrawal, markWithdrawalPaid, rejectWithdrawal,
 } from "@/app/actions/wallet";
 import { approvePayout, payPayout, holdPayout } from "@/app/actions/payouts";
-import { createRace as createRaceAction, editRace as editRaceAction } from "@/app/actions/races";
+import { createRace as createRaceAction, editRace as editRaceAction, setRaceHidden } from "@/app/actions/races";
 import { confirmSettlement } from "@/app/actions/settlement";
 import { toggleRaceCounts } from "@/app/actions/championships";
 import { awardPointsAdjustment, deletePointsAdjustment } from "@/app/actions/pointAdjustments";
@@ -578,14 +578,14 @@ export function AdminRaces({ S }) {
         </tr></thead>
           <tbody>{allRaces.slice((raceP - 1) * PAGE_SIZE, raceP * PAGE_SIZE).map(r => { const ch = S.championships.find(c => c.id === r.champId);
             return <tr key={r.id} className="rowhov">
-            <td className="wrapcell"><div style={{ fontWeight: 500 }}>{r.name}</div><div className="cap"><LocalTime ts={r.dt} /></div></td>
+            <td className="wrapcell"><div style={{ fontWeight: 500 }}>{r.name}{r.hidden && <span className="badge b-pend" style={{ marginLeft: 8 }}>Hidden</span>}</div><div className="cap"><LocalTime ts={r.dt} /></div></td>
             <td className="wrapcell" style={{ fontSize: 13 }}>{ch ? <>{ch.name}<div className="cap">Round {r.round || "—"}</div></> : <span className="muted">Exhibition</span>}</td>
             <td><div className="flex" style={{ gap: 8 }}>
               {[["Drv", "countsD"], ["Con", "countsC"]].map(([l, f]) => <label key={f} className="flex" style={{ gap: 6, alignItems: "center", fontSize: 12, color: "var(--muted-2)", cursor: "pointer" }}>
                 <Check on={!!r[f]} onClick={() => run(toggleRaceCounts, { raceId: r.id, field: f })} />{l}</label>)}
             </div></td>
             <td className="num" style={{ textAlign: "right" }}>{fmt(poolOf(S.bets, r.id))}</td>
-            <td style={{ textAlign: "right" }}><Badge s={r.status} /></td>
+            <td style={{ textAlign: "right" }}><Badge s={r.status} /><div style={{ marginTop: 4 }}><EyeToggle hidden={r.hidden} onClick={() => run(setRaceHidden, { id: r.id, hidden: !r.hidden }, r.hidden ? "Race is visible to players again." : "Race hidden from players.")} /></div></td>
             <td style={{ textAlign: "right" }}>{r.status === "settled" ? <Link href={`/admin/settle?race=${r.id}`} className="btn btn-ghost btn-xs">Adjustments</Link> : <button className="btn btn-ghost btn-xs" onClick={() => setRen({ id: r.id, name: r.name, circuit: r.circuit, dt: r.dt, lock: r.lock, rake: String(r.rake), champId: r.champId || "", round: r.round || "", countsD: !!r.countsD, countsC: !!r.countsC, status: r.status, drivers: (r.drivers || []).slice(), gridLocked: r.status !== "upcoming", pole: r.pole || "", minLaps: r.minLaps != null ? String(r.minLaps) : "" })}>Edit</button>}</td>
           </tr>; })}</tbody></table></div>
         <Pagination page={raceP} pageCount={racePageCount} total={allRaces.length} onChange={setRacePage} />

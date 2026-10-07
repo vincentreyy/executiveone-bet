@@ -11,9 +11,9 @@ import { Dashboard } from "@/components/UserScreens";
 export default async function DashboardPage() {
   const user = await requireUserOrRedirect();
   const { balance, tx } = await getMyBalanceAndTx(user.id);
-  const rawBets = await getPoolBets();
+  const rawBets = await getPoolBets({ publicOnly: true });
   const bets = rawBets.map(b => b.uid === user.id ? { ...b, uid: "me", user: "You" } : b);
-  const races = await getRaceList();
+  const races = await getRaceList({ publicOnly: true });
   const { roster, teams } = await getRosterAndTeams();
   const { pendingWin } = await getMyPendingWinWd(user.id);
 

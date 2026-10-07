@@ -11,10 +11,10 @@ import { RacePage } from "@/components/UserScreens";
 export default async function RaceMarketPage({ params }) {
   const { raceId } = await params;
   const user = await getOptionalUser();
-  const { race, siblings } = await getRaceMarket(raceId);
+  const { race, siblings } = await getRaceMarket(raceId, { publicOnly: true });
   if (!race || race.kind === "season") notFound();
 
-  const rawBets = await getPoolBets();
+  const rawBets = await getPoolBets({ publicOnly: true });
   const bets = user ? rawBets.map(b => b.uid === user.id ? { ...b, uid: "me", user: "You" } : b) : rawBets;
   const { roster, teams } = await getRosterAndTeams();
   const balance = user ? (await getMyBalanceAndTx(user.id)).balance : 0;

@@ -32,7 +32,7 @@ export async function placeBet(input) {
   try {
     await db.transaction(async (tx) => {
       const [race] = await tx.select().from(races).where(eq(races.id, raceId));
-      if (!race || race.status !== "open") {
+      if (!race || race.hidden || race.status !== "open") {
         throw new Error("Betting is not open for this race.");
       }
 

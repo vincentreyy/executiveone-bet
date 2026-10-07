@@ -57,6 +57,13 @@
       "when": 1789835271795,
       "tag": "0007_brown_quicksilver",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791389051576,
+      "tag": "0008_lyrical_runaways",
+      "breakpoints": true
     }
   ]
 }
