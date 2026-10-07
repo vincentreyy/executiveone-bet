@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
-import { Stat, Pagination } from "./UserScreens";
+import Link from "next/link";
+import { Stat, Pagination, Dot } from "./UserScreens";
+import { useEntrantLookup } from "@/lib/entrantContext";
 import { useServerAction } from "@/lib/useServerAction";
 import { useToast } from "@/components/ToastProvider";
 import { CUR, fmt, money, ago, PAGE_SIZE, PERMS, ALL_PERMS, PERM_LABEL } from "@/lib/store";
@@ -34,11 +36,13 @@ function TempPasswordModal({ title, username, tempPassword, onClose }) {
 
 export function AdminUsers({ S }) {
   const run = useServerAction();
+  const D = useEntrantLookup();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
   const [adj, setAdj] = useState("");
   const [reason, setReason] = useState("");
   const [rn, setRn] = useState({ name: "", ign: "" });
+  const [betPage, setBetPage] = useState(1);
   const [nu, setNu] = useState(null);
   const [pwReveal, setPwReveal] = useState(null);
   const list = S.users.filter(u => (u.name + u.ign + u.un).toLowerCase().includes(q.toLowerCase()))
@@ -75,7 +79,7 @@ export function AdminUsers({ S }) {
             <td className="num" style={{ textAlign: "right", color: pl >= 0 ? "var(--up)" : "var(--down)" }}>{pl >= 0 ? "+" : ""}{fmt(pl)}</td>
             <td style={{ textAlign: "right" }}><span className={"badge " + (x.invited ? "b-pend" : x.status === "active" ? "b-open" : "b-live")}>{x.invited ? "temp password" : x.status}</span>
               {x.flags.length > 0 && <div className="cap" style={{ color: "var(--yellow)", marginTop: 4 }}>{x.flags.length} flag{x.flags.length > 1 ? "s" : ""}</div>}</td>
-            <td style={{ textAlign: "right" }}><button className="btn btn-ghost btn-xs" onClick={() => { setOpen(x.id); setAdj(""); setReason(""); setRn({ name: x.name, ign: x.ign }); }}>Manage</button></td>
+            <td style={{ textAlign: "right" }}><button className="btn btn-ghost btn-xs" onClick={() => { setOpen(x.id); setAdj(""); setReason(""); setRn({ name: x.name, ign: x.ign }); setBetPage(1); }}>Manage</button></td>
           </tr>; })}</tbody>
       </table></div>
       {!list.length && <div className="muted" style={{ padding: "28px 0", textAlign: "center", fontSize: 13 }}>No accounts match “{q}”.</div>}
@@ -143,6 +147,22 @@ export function AdminUsers({ S }) {
       {u.flags.length > 0 && <div className="card-flat" style={{ background: "rgba(58,212,237,.08)", padding: "12px 14px", marginBottom: 16 }}>
         <div className="cap" style={{ color: "var(--yellow)", marginBottom: 4 }}>REVIEW FLAGS</div>
         <div style={{ fontSize: 13 }}>{u.flags.join(" · ")}</div></div>}
+      {S.betsByUser && (() => { const mine = (S.betsByUser[u.id] || []).slice().sort((a, b) => b.at - a.at);
+        const BET_PAGE = 5, betPages = Math.max(1, Math.ceil(mine.length / BET_PAGE)), bp = Math.min(betPage, betPages);
+        return <div className="card-flat" style={{ background: "var(--elev)", padding: "12px 14px", marginBottom: 16 }}>
+          <div className="flex" style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div className="cap">BETS ({mine.length})</div>
+            {!!mine.length && <Link className="cap" href="/admin/bettors" style={{ textDecoration: "underline dotted" }}>Per-race view</Link>}</div>
+          {!mine.length ? <div className="muted" style={{ fontSize: 13 }}>No bets placed.</div> : <div>
+            {mine.slice((bp - 1) * BET_PAGE, bp * BET_PAGE).map(b => { const d = D(b.dId), r = S.races.find(x => x.id === b.raceId);
+              return <div key={b.id} className="flex" style={{ gap: 10, alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderTop: "1px solid var(--hair)", fontSize: 13 }}>
+                <div className="flex" style={{ gap: 8, alignItems: "center", minWidth: 0 }}><Dot d={d} size={22} />
+                  <div style={{ minWidth: 0 }}><div style={{ fontWeight: 500 }}>{d.n}</div><div className="cap">{r?.name || "—"} · {ago(b.at)}</div></div></div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}><div className="num">{fmt(b.stake)}</div>
+                  <div className="cap">{b.status}{b.payout > 0 ? " · +" + fmt(b.payout) : ""}</div></div>
+              </div>; })}
+            <Pagination page={bp} pageCount={betPages} total={mine.length} pageSize={BET_PAGE} onChange={setBetPage} /></div>}
+        </div>; })()}
       <div className="card-flat" style={{ background: "var(--elev)", padding: "12px 14px", marginBottom: 16 }}>
         <div className="cap" style={{ marginBottom: 8 }}>ADMIN ROLE</div>
         <div className="flex" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
